@@ -101,4 +101,9 @@ public class BillingNotification {
         error,
         success
     }
+
+    @Override
+    public String toString() {
+        return companyId.toString() + " " + notificationType.toString() + " " + title + " " + message;
+    }
 }

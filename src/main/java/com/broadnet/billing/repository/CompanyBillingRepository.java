@@ -33,4 +33,5 @@ public interface CompanyBillingRepository extends JpaRepository<CompanyBilling, 
 
     @Query("SELECT cb FROM CompanyBilling cb WHERE cb.billingMode = 'postpaid' AND cb.enterprisePricingId IS NOT NULL")
     List<CompanyBilling> findEnterpriseCustomers();
+
 }

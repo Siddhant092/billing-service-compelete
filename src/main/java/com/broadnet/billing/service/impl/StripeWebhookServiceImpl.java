@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -245,7 +247,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
      * Triggered when a new subscription is created
      */
     private void handleSubscriptionCreated(Event event) {
-        sendNotification("siddhantsinghrajpoot91@gmail.com", "TestMail", "test mail sent when subscription created");
         Subscription subscription = (Subscription) event.getDataObjectDeserializer()
                 .getObject().orElseThrow();
 
@@ -283,7 +284,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
      * Triggered when subscription is modified (plan change, renewal, etc.)
      */
     private void handleSubscriptionUpdated(Event event) {
-        sendNotification("siddhantsinghrajpoot91@gmail.com", "TestMail", "test mail sent when subscription updated");
         Subscription subscription = (Subscription) event.getDataObjectDeserializer()
                 .getObject().orElseThrow();
 
@@ -346,7 +346,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
      * Triggered when subscription is canceled and expires
      */
     private void handleSubscriptionDeleted(Event event) {
-        sendNotification("siddhantsinghrajpoot91@gmail.com", "TestMail", "test mail sent when subscription has been deleted");
         Subscription subscription = (Subscription) event.getDataObjectDeserializer()
                 .getObject().orElseThrow();
 
@@ -387,7 +386,6 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
      * Triggered 3 days before trial expires
      */
     private void handleSubscriptionTrialWillEnd(Event event) {
-        sendNotification("siddhantsinghrajpoot91@gmail.com", "TestMail", "test mail sent when subscription trial going to end");
         Subscription subscription = (Subscription) event.getDataObjectDeserializer()
                 .getObject().orElseThrow();
 
@@ -422,68 +420,205 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
      * Handle invoice.created
      * Triggered when Stripe creates a new invoice
      */
+
     private void handleInvoiceCreated(Event event) {
-        sendNotification("siddhantsinghrajpoot91@gmail.com", "TestMail", "test mail sent when invoice created");
         Invoice invoice = (Invoice) event.getDataObjectDeserializer()
                 .getObject().orElseThrow();
 
         log.info("Processing invoice.created: {}", invoice.getId());
 
+        // Step 1: Find company billing record
         CompanyBilling billing = findBillingByStripeCustomer(invoice.getCustomer());
         if (billing == null) {
             log.warn("No billing record found for customer: {}", invoice.getCustomer());
             return;
         }
 
-        // Create or update invoice record
+        // Step 2: Fetch customer details from Stripe (for email)
+        Customer customer = null;
+        try {
+            customer = Customer.retrieve(invoice.getCustomer());
+        } catch (Exception e) {
+            log.error("Failed to fetch customer details from Stripe: {}", e.getMessage());
+            // Continue processing - we can still save invoice without customer details
+        }
+
+        // Step 3: Create or update invoice record
         BillingInvoice billingInvoice = invoiceRepository
                 .findByStripeInvoiceId(invoice.getId())
                 .orElse(new BillingInvoice());
 
+        // Set all invoice fields
         billingInvoice.setCompanyId(billing.getCompanyId());
         billingInvoice.setStripeInvoiceId(invoice.getId());
         billingInvoice.setInvoiceNumber(invoice.getNumber());
         billingInvoice.setStatus(mapInvoiceStatus(invoice.getStatus()));
+
+        // Amounts (with null safety)
         billingInvoice.setAmountDue(invoice.getAmountDue() != null ? invoice.getAmountDue().intValue() : 0);
         billingInvoice.setAmountPaid(invoice.getAmountPaid() != null ? invoice.getAmountPaid().intValue() : 0);
         billingInvoice.setSubtotal(invoice.getSubtotal() != null ? invoice.getSubtotal().intValue() : 0);
 //        billingInvoice.setTaxAmount(invoice.getTax() != null ? invoice.getTax().intValue() : 0);
         billingInvoice.setTotal(invoice.getTotal() != null ? invoice.getTotal().intValue() : 0);
         billingInvoice.setCurrency(invoice.getCurrency());
+
+        // Dates
         billingInvoice.setInvoiceDate(toLocalDateTime(invoice.getCreated()));
         billingInvoice.setDueDate(invoice.getDueDate() != null ? toLocalDateTime(invoice.getDueDate()) : null);
         billingInvoice.setPeriodStart(invoice.getPeriodStart() != null ? toLocalDateTime(invoice.getPeriodStart()) : null);
         billingInvoice.setPeriodEnd(invoice.getPeriodEnd() != null ? toLocalDateTime(invoice.getPeriodEnd()) : null);
+
+        // Important: Save invoice URLs for customer access
         billingInvoice.setHostedInvoiceUrl(invoice.getHostedInvoiceUrl());
         billingInvoice.setInvoicePdfUrl(invoice.getInvoicePdf());
 
-        // Store line items as JSON
+        // Store line items as JSON (important for itemized view)
         try {
-            billingInvoice.setLineItems(objectMapper.writeValueAsString(invoice.getLines().getData()));
+            if (invoice.getLines() != null && invoice.getLines().getData() != null) {
+                billingInvoice.setLineItems(objectMapper.writeValueAsString(invoice.getLines().getData()));
+            } else {
+                billingInvoice.setLineItems("[]");
+            }
         } catch (Exception e) {
             log.error("Error serializing line items: {}", e.getMessage());
             billingInvoice.setLineItems("[]");
         }
 
-        invoiceRepository.save(billingInvoice);
-
-        // Create notification
-        createNotification(billing.getCompanyId(),
-                BillingNotification.NotificationType.invoice_created,
-                "New Invoice",
-                String.format("Invoice for $%.2f has been created", invoice.getTotal() / 100.0),
-                BillingNotification.Severity.info,
-                event.getId());
-
-        // Send invoice created email
-        String customerEmail = invoice.getCustomerEmail();
-        if (customerEmail != null) {
-            sendNotification(customerEmail, INVOICE_CREATED_SUBJECT, INVOICE_CREATED_MESSAGE);
+        // Store customer details in metadata if needed
+        try {
+            if (customer != null) {
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("customer_email", customer.getEmail());
+                metadata.put("customer_name", customer.getName());
+                metadata.put("customer_phone", customer.getPhone());
+                billingInvoice.setMetadata(objectMapper.writeValueAsString(metadata));
+            }
+        } catch (Exception e) {
+            log.error("Error serializing metadata: {}", e.getMessage());
         }
 
-        log.info("Invoice created for company: {}", billing.getCompanyId());
+        // Save to database
+        invoiceRepository.save(billingInvoice);
+        log.info("Invoice saved to database: {}", billingInvoice.getId());
+
+        // Step 4: Send email notification to customer
+        if (customer != null && customer.getEmail() != null) {
+            try {
+                sendInvoiceEmail(
+                        customer.getEmail(),
+                        customer.getName() != null ? customer.getName() : "Valued Customer",
+                        billingInvoice,
+                        invoice.getHostedInvoiceUrl()
+                );
+                log.info("Invoice email sent to: {}", customer.getEmail());
+            } catch (Exception e) {
+                log.error("Failed to send invoice email: {}", e.getMessage());
+                // Don't fail the webhook if email fails
+            }
+        }
+
+        // Step 5: Create in-app notification
+        createNotification(
+                billing.getCompanyId(),
+                BillingNotification.NotificationType.invoice_created,
+                "New Invoice Created",
+                String.format("Invoice %s for $%.2f has been created. Due: %s",
+                        invoice.getNumber() != null ? invoice.getNumber() : invoice.getId().substring(0, 8),
+                        invoice.getTotal() / 100.0,
+                        invoice.getDueDate() != null ? toLocalDateTime(invoice.getDueDate()).toLocalDate().toString() : "immediately"
+                ),
+                BillingNotification.Severity.info,
+                event.getId()
+        );
+
+        log.info("Invoice created successfully for company: {}", billing.getCompanyId());
     }
 
+    /**
+     * Send invoice email to customer
+     *
+     * @param email Customer email
+     * @param name Customer name
+     * @param invoice BillingInvoice record
+     * @param invoiceUrl Stripe hosted invoice URL
+     */
+    private void sendInvoiceEmail(String email, String name, BillingInvoice invoice, String invoiceUrl) {
+        String subject = String.format("Invoice %s from Broadnet.ai",
+                invoice.getInvoiceNumber() != null ? invoice.getInvoiceNumber() : "New Invoice");
+
+        String body = buildInvoiceEmailBody(name, invoice, invoiceUrl);
+
+        sendNotification(email, subject, body);
+
+        log.debug("Email prepared for {}: {}", email, subject);
+    }
+
+    /**
+     * Build invoice email HTML body
+     */
+    private String buildInvoiceEmailBody(String name, BillingInvoice invoice, String invoiceUrl) {
+        return String.format("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #4F46E5; color: white; padding: 20px; text-align: center; }
+                .content { background: #f9fafb; padding: 30px; margin: 20px 0; }
+                .invoice-details { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                .amount { font-size: 32px; font-weight: bold; color: #4F46E5; margin: 20px 0; }
+                .button { display: inline-block; background: #4F46E5; color: white; padding: 12px 30px; 
+                          text-decoration: none; border-radius: 6px; margin: 20px 0; }
+                .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Invoice from Broadnet.ai</h1>
+                </div>
+                <div class="content">
+                    <p>Hi %s,</p>
+                    <p>Thank you for your business! A new invoice has been generated for your account.</p>
+                    
+                    <div class="invoice-details">
+                        <h2>Invoice Details</h2>
+                        <p><strong>Invoice Number:</strong> %s</p>
+                        <p><strong>Invoice Date:</strong> %s</p>
+                        <p><strong>Due Date:</strong> %s</p>
+                        <p><strong>Billing Period:</strong> %s - %s</p>
+                        
+                        <div class="amount">
+                            Total: $%.2f %s
+                        </div>
+                    </div>
+                    
+                    <p>You can view and pay your invoice online:</p>
+                    <a href="%s" class="button">View Invoice</a>
+                    
+                    <p>If you have any questions about this invoice, please don't hesitate to contact our support team.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Broadnet.ai - AI-Powered Customer Service Platform</p>
+                    <p>This is an automated email. Please do not reply to this message.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """,
+                name,
+                invoice.getInvoiceNumber() != null ? invoice.getInvoiceNumber() : "Pending",
+                invoice.getInvoiceDate().toLocalDate().toString(),
+                invoice.getDueDate() != null ? invoice.getDueDate().toLocalDate().toString() : "Immediate",
+                invoice.getPeriodStart() != null ? invoice.getPeriodStart().toLocalDate().toString() : "N/A",
+                invoice.getPeriodEnd() != null ? invoice.getPeriodEnd().toLocalDate().toString() : "N/A",
+                invoice.getTotal() / 100.0,
+                invoice.getCurrency().toUpperCase(),
+                invoiceUrl
+        );
+    }
     /**
      * Handle invoice.finalized
      * Triggered when invoice is finalized and ready for payment
@@ -494,17 +629,30 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
 
         log.info("Processing invoice.finalized: {}", invoice.getId());
 
-        Optional<BillingInvoice> invoiceOpt = invoiceRepository.findByStripeInvoiceId(invoice.getId());
-        if (invoiceOpt.isEmpty()) {
-            log.warn("Invoice not found: {}", invoice.getId());
-            return;
+        BillingInvoice billingInvoice = invoiceRepository
+                .findByStripeInvoiceId(invoice.getId())
+                .orElse(new BillingInvoice()); // safety for out-of-order events
+
+        // IMPORTANT: always set ID + company if new
+        if (billingInvoice.getId() == null) {
+            CompanyBilling billing = findBillingByStripeCustomer(invoice.getCustomer());
+            if (billing == null) {
+                log.warn("No billing found for customer: {}", invoice.getCustomer());
+                return;
+            }
+            billingInvoice.setCompanyId(billing.getCompanyId());
+            billingInvoice.setStripeInvoiceId(invoice.getId());
         }
 
-        BillingInvoice billingInvoice = invoiceOpt.get();
-        billingInvoice.setStatus(BillingInvoice.InvoiceStatus.open);
+        // ✅ UPDATE EVERYTHING HERE
+        billingInvoice.setStatus(mapInvoiceStatus(invoice.getStatus()));
+        billingInvoice.setHostedInvoiceUrl(invoice.getHostedInvoiceUrl());
+        billingInvoice.setInvoicePdfUrl(invoice.getInvoicePdf());
+
         invoiceRepository.save(billingInvoice);
 
-        log.info("Invoice finalized: {}", invoice.getId());
+        sendNotification(invoice.getCustomerEmail(), "invoice finalise", "temporary body for invoice");
+        log.info("Invoice finalized with PDF: {}", invoice.getInvoicePdf());
     }
 
     /**
@@ -1021,8 +1169,8 @@ public class StripeWebhookServiceImpl implements StripeWebhookService {
         log.info("Sending email to '{}': {}", toEmail, subject);
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("siddhantr.hti@hti.com");
-            message.setTo("siddhantsinghrajpoot91@gmail.com");
+            message.setFrom("siddhantr.hti@gmail.com");
+            message.setTo(toEmail);
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);

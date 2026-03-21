@@ -97,16 +97,15 @@ public class AdminBillingServiceImpl implements AdminBillingService {
         List<BillingPlanLimit> oldLimits = planLimitRepository
                 .findActiveLimitsByPlanId(plan.getId());
 
-        oldLimits.stream()
-                .filter(l -> l.getLimitType().equals(request.getLimitType()) &&
-                        l.getBillingInterval().equals(request.getBillingInterval()))
-                .forEach(l -> {
-                    l.setEffectiveTo(request.getEffectiveFrom());
-                    l.setIsActive(false);
-                    planLimitRepository.save(l);
-                });
+        // Step 1: Deactivate old limits FIRST (bulk update preferred)
+        planLimitRepository.deactivateExistingLimits(
+                plan.getId(),
+                BillingPlanLimit.LimitType.valueOf(request.getLimitType()),
+                BillingPlanLimit.BillingInterval.valueOf(request.getBillingInterval()),
+                request.getEffectiveFrom()
+        );
 
-        // Create new limit
+// Step 2: Create new limit
         BillingPlanLimit newLimit = new BillingPlanLimit();
         newLimit.setPlan(plan);
         newLimit.setLimitType(BillingPlanLimit.LimitType.valueOf(request.getLimitType()));
@@ -119,6 +118,7 @@ public class AdminBillingServiceImpl implements AdminBillingService {
 
         // Find affected companies
         List<CompanyBilling> affectedCompanies = billingRepository.findAll().stream()
+                .filter(cb -> cb.getActivePlan() != null) // ✅ prevent NPE
                 .filter(cb -> plan.getId().equals(cb.getActivePlan().getId()))
                 .collect(Collectors.toList());
 
@@ -199,18 +199,18 @@ public class AdminBillingServiceImpl implements AdminBillingService {
         billingRepository.save(billing);
 
         // Create notification
-        createNotification(request.getCompanyId(),
-                "enterprise_pricing_set",
-                "Enterprise Pricing Configured",
-                "Your custom enterprise pricing has been configured");
-
-        // Create history entry
-        BillingEntitlementHistory history = new BillingEntitlementHistory();
-        history.setCompanyId(request.getCompanyId());
-        history.setChangeType(/*"enterprise_pricing_set"*/ BillingEntitlementHistory.ChangeType.valueOf("enterprise_pricing_set"));
+//        createNotification(request.getCompanyId(),
+//                "enterprise_pricing_set",
+//                "Enterprise Pricing Configured",
+//                "Your custom enterprise pricing has been configured");
+//
+//         Create history entry
+//        BillingEntitlementHistory history = new BillingEntitlementHistory();
+//        history.setCompanyId(request.getCompanyId());
+//        history.setChangeType(/*"enterprise_pricing_set"*/ BillingEntitlementHistory.ChangeType.valueOf("enterprise_pricing_set"));
 //        history.setNewValue(request.getPricingTier());
-        history.setTriggeredBy(BillingEntitlementHistory.TriggeredBy.admin);
-        entitlementHistoryRepository.save(history);
+//        history.setTriggeredBy(BillingEntitlementHistory.TriggeredBy.admin);
+//        entitlementHistoryRepository.save(history);
 
         log.info("Enterprise pricing set for company: {} - ID: {}",
                 request.getCompanyId(), savedPricing.getId());

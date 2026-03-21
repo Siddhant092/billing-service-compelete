@@ -1,7 +1,9 @@
 package com.broadnet.billing.repository;
 
 import com.broadnet.billing.entity.BillingPlanLimit;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,4 +32,20 @@ public interface BillingPlanLimitRepository extends JpaRepository<BillingPlanLim
 
     @Query("SELECT l FROM BillingPlanLimit l WHERE l.plan.id = :planId ORDER BY l.effectiveFrom DESC")
     List<BillingPlanLimit> findAllByPlanIdOrderByEffectiveFromDesc(@Param("planId") Long planId);
+
+    @Modifying
+    @Query("""
+    UPDATE BillingPlanLimit l
+    SET l.isActive = false,
+        l.effectiveTo = :effectiveFrom
+    WHERE l.plan.id = :planId
+      AND l.limitType = :limitType
+      AND l.billingInterval = :billingInterval
+      AND l.isActive = true
+""")
+    void deactivateExistingLimits(Long planId,
+                                  BillingPlanLimit.LimitType limitType,
+                                  BillingPlanLimit.BillingInterval billingInterval,
+                                  LocalDateTime effectiveFrom);
+
 }

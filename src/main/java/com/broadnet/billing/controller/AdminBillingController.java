@@ -82,7 +82,7 @@ public class AdminBillingController {
      */
     @PutMapping("/plans/{plan_code}/limits")
     public ResponseEntity<PlanLimitUpdateResponse> updatePlanLimits(
-            @PathVariable String planCode,
+            @PathVariable("plan_code") String planCode,
             @Valid @RequestBody UpdatePlanLimitRequest request) {
 
         log.info("Admin updating limit for plan: {}, limit_type: {}", planCode, request.getLimitType());
