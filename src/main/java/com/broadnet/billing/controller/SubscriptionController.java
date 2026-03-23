@@ -70,12 +70,13 @@ public class SubscriptionController {
      */
     @GetMapping("/plans")
     public ResponseEntity<List<AvailablePlanResponse>> getAvailablePlans(
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(value = "include_enterprise", required = false, defaultValue = "false") boolean includeEnterprise) {
 
         log.debug("Fetching available plans, includeEnterprise: {}", includeEnterprise);
 
         try {
-            List<AvailablePlanResponse> plans = subscriptionService.getAvailablePlans(includeEnterprise);
+            List<AvailablePlanResponse> plans = subscriptionService.getAvailablePlans(userId, includeEnterprise);
             log.info("Returned {} available plans", plans.size());
             return ResponseEntity.ok(plans);
 
@@ -130,13 +131,15 @@ public class SubscriptionController {
      */
     @PostMapping("/change-plan")
     public ResponseEntity<SubscriptionResponse> changePlan(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody ChangePlanRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Changing plan for company: {}, new plan: {}", companyId, request.getPlanCode());
 
         try {
             SubscriptionResponse response = subscriptionService.changePlan(
+                    userId,
                     companyId,
                     request.getPlanCode(),
                     request.getBillingInterval()
@@ -193,14 +196,16 @@ public class SubscriptionController {
      */
     @PostMapping("/cancel")
     public ResponseEntity<SubscriptionResponse> cancelSubscription(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody CancelSubscriptionRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Canceling subscription for company: {}, atPeriodEnd: {}",
                 companyId, request.isCancelAtPeriodEnd());
 
         try {
             SubscriptionResponse response = subscriptionService.cancelSubscription(
+                    userId,
                     companyId,
                     request.isCancelAtPeriodEnd(),
                     request.getReason()
@@ -251,12 +256,13 @@ public class SubscriptionController {
      */
     @PostMapping("/reactivate")
     public ResponseEntity<SubscriptionResponse> reactivateSubscription(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Reactivating subscription for company: {}", companyId);
 
         try {
-            SubscriptionResponse response = subscriptionService.reactivateSubscription(companyId);
+            SubscriptionResponse response = subscriptionService.reactivateSubscription(userId, companyId);
 
             log.info("Subscription reactivated for company: {}", companyId);
             return ResponseEntity.ok(response);

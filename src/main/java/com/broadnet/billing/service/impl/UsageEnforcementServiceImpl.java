@@ -68,7 +68,10 @@ public class UsageEnforcementServiceImpl implements UsageEnforcementService {
      */
     @Override
     @Transactional
-    public UsageCheckResponse checkAndEnforceAnswersUsage(Long companyId, int count) {
+    public UsageCheckResponse checkAndEnforceAnswersUsage(Long userId, Long companyId, int count) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in checkAndEnforceAnswersUsage");
+        }
 
         long startTime = System.currentTimeMillis();
         log.debug("Checking answer usage for company {}, count: {}", companyId, count);
@@ -199,7 +202,10 @@ public class UsageEnforcementServiceImpl implements UsageEnforcementService {
      */
     @Override
     @Transactional(readOnly = true)
-    public UsageCheckResponse checkKbPageUsage(Long companyId) {
+    public UsageCheckResponse checkKbPageUsage(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in checkKbPageUsage");
+        }
 
         log.debug("Checking KB page usage for company {}", companyId);
 
@@ -245,7 +251,10 @@ public class UsageEnforcementServiceImpl implements UsageEnforcementService {
      */
     @Override
     @Transactional(readOnly = true)
-    public UsageStatus getUsageStatus(Long companyId) {
+    public UsageStatus getUsageStatus(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getUsageStatus");
+        }
 
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new CompanyBillingNotFoundException(companyId));

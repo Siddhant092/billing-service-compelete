@@ -21,7 +21,7 @@ public interface BillingDetailsService {
      *
      * Return: BillingDetailsResponse
      */
-    BillingDetailsResponse getBillingDetails(Long companyId);
+    BillingDetailsResponse getBillingDetails(Long userId, Long companyId);
 
     /**
      * Update billing address
@@ -37,6 +37,7 @@ public interface BillingDetailsService {
      * Return: Updated BillingDetailsResponse
      */
     BillingDetailsResponse updateBillingAddress(
+            Long userId,
             Long companyId,
             UpdateAddressRequest request
     );
@@ -56,6 +57,7 @@ public interface BillingDetailsService {
      * Return: Updated BillingDetailsResponse
      */
     BillingDetailsResponse updatePaymentMethod(
+            Long userId,
             Long companyId,
             UpdatePaymentMethodRequest request
     );
@@ -67,6 +69,9 @@ public interface BillingDetailsService {
      *
      * Return: BillingPortalResponse with portal URL
      */
-    BillingPortalResponse getStripePortalUrl(Long companyId);
+    BillingPortalResponse getStripePortalUrl(
+            Long userId,
+            Long companyId
+    );
 }
 

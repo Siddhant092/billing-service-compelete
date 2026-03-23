@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -48,7 +47,7 @@ public class BillingCheckoutServiceImpl implements BillingCheckoutService {
 
     /**
      * Create Stripe checkout session for subscription
-     *
+     * <p>
      * Flow:
      * 1. Validate plan exists and is active
      * 2. Get BillingStripePrice for plan + billing_interval
@@ -56,21 +55,26 @@ public class BillingCheckoutServiceImpl implements BillingCheckoutService {
      * 4. Create Stripe checkout session with price
      * 5. Return session URL
      *
-     * @param planCode Plan code (e.g., "professional")
+     * @param userId
+     * @param planCode        Plan code (e.g., "professional")
      * @param billingInterval "month" or "year"
-     * @param successUrl URL after successful payment
-     * @param cancelUrl URL if user cancels
-     * @param companyId Company ID for this subscription
+     * @param successUrl      URL after successful payment
+     * @param cancelUrl       URL if user cancels
+     * @param companyId       Company ID for this subscription
      * @return CheckoutSessionResponse with session ID and URL
      */
     @Override
     @Transactional
     public CheckoutSessionResponse createCheckoutSession(
-            String planCode,
+            Long userId, String planCode,
             String billingInterval,
             String successUrl,
             String cancelUrl,
             Long companyId) {
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in createCheckoutSession");
+        }
 
         log.info("Creating checkout session - Plan: {}, Interval: {}, Company: {}",
                 planCode, billingInterval, companyId);

@@ -54,8 +54,12 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     @Override
     @Transactional
     public EnterpriseContactResponse submitContactRequest(
+            Long  userId,
             CreateEnterpriseContactRequest request,
             Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in submitContactRequest");
+        }
 
         log.info("Submitting enterprise contact request from: {}", request.getEmail());
 
@@ -112,7 +116,10 @@ public class EnterpriseServiceImpl implements EnterpriseService {
      */
     @Override
     @Transactional(readOnly = true)
-    public EnterpriseSummaryResponse getEnterpriseSummary(Long companyId) {
+    public EnterpriseSummaryResponse getEnterpriseSummary(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getEnterpriseSummary");
+        }
 
         log.debug("Getting enterprise summary for company: {}", companyId);
 
@@ -183,7 +190,11 @@ public class EnterpriseServiceImpl implements EnterpriseService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<BillingPeriodResponse> getBillingPeriods(Long companyId, int limit) {
+    public List<BillingPeriodResponse> getBillingPeriods(Long userId, Long companyId, int limit) {
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getBillingPeriods");
+        }
 
         log.debug("Getting billing periods for company: {}, limit: {}", companyId, limit);
 

@@ -12,6 +12,7 @@ import com.broadnet.billing.service.BillingDashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,10 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BillingNotificationResponse> getNotifications(Long companyId, Pageable pageable) {
+    public Page<BillingNotificationResponse> getNotifications(Long userId, Long companyId, Pageable pageable) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getNotifications");
+        }
         Page<BillingNotification> notifications = notificationRepository
                 .findUnreadByCompanyId(companyId, pageable);
 
@@ -48,7 +52,10 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public CurrentPlanResponse getCurrentPlan(Long companyId) {
+    public CurrentPlanResponse getCurrentPlan(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getCurrentPlan");
+        }
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new CompanyBillingNotFoundException(companyId));
 
@@ -69,7 +76,10 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public BillingSnapshotResponse getBillingSnapshot(Long companyId) {
+    public BillingSnapshotResponse getBillingSnapshot(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getBillingSnapshot");
+        }
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new CompanyBillingNotFoundException(companyId));
 
@@ -86,7 +96,11 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public UsageMetricsResponse getUsageMetrics(Long companyId) {
+    public UsageMetricsResponse getUsageMetrics(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getUsageMetrics");
+        }
+
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
                 .orElseThrow(() -> new CompanyBillingNotFoundException(companyId));
 
@@ -108,7 +122,11 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AvailableBoostResponse> getAvailableBoosts(Long companyId, String category) {
+    public List<AvailableBoostResponse> getAvailableBoosts(Long userId, Long companyId, String category) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getAvailableBoosts");
+        }
+
         List<BillingAddon> addons = category != null
                 ? addonRepository.findActiveByCategory(category)
                 : addonRepository.findAllActiveAddons();
@@ -127,21 +145,27 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public DashboardOverviewResponse getDashboardOverview(Long companyId) {
+    public DashboardOverviewResponse getDashboardOverview(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getDashboardOverview");
+        }
         return DashboardOverviewResponse.builder()
-                .currentPlan(getCurrentPlan(companyId))
-                .billingSnapshot(getBillingSnapshot(companyId))
-                .usageMetrics(getUsageMetrics(companyId))
-                .notifications(getNotifications(companyId,
-                        org.springframework.data.domain.PageRequest.of(0, 5))
+                .currentPlan(getCurrentPlan(userId, companyId))
+                .billingSnapshot(getBillingSnapshot(userId, companyId))
+                .usageMetrics(getUsageMetrics(userId, companyId))
+                .notifications(getNotifications(userId, companyId,
+                        PageRequest.of(0, 5))
                         .getContent())
-                .availableBoosts(getAvailableBoosts(companyId, null))
+                .availableBoosts(getAvailableBoosts(userId, companyId, null))
                 .build();
     }
 
     @Override
     @Transactional
-    public void markNotificationAsRead(Long notificationId, Long companyId) {
+    public void markNotificationAsRead(Long userId, Long notificationId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in markNotificationAsRead");
+        }
         BillingNotification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
 
@@ -155,7 +179,10 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional
-    public void deleteNotification(Long notificationId, Long companyId) {
+    public void deleteNotification(Long userId, Long notificationId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in deleteNotification");
+        }
         BillingNotification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
 
@@ -168,9 +195,13 @@ class BillingDashboardServiceImpl implements BillingDashboardService {
 
     @Override
     @Transactional
-    public BoostPurchaseResponse purchaseBoost(Long companyId, String addonCode, String billingInterval) {
+    public BoostPurchaseResponse purchaseBoost(Long userId, Long companyId, String addonCode, String billingInterval) {
         // Implementation for purchasing boosts - similar to plan change
         // Update CompanyBilling with new addon, recalculate limits, create invoice
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in purchaseBoost");
+        }
         return BoostPurchaseResponse.builder()
                 .success(true)
                 .message("Boost purchased successfully")

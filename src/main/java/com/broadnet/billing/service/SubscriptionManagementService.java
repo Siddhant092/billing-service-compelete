@@ -25,7 +25,7 @@ public interface SubscriptionManagementService {
      *
      * Return: List of AvailablePlanResponse with all plan details
      */
-    List<AvailablePlanResponse> getAvailablePlans(boolean includeEnterprise);
+    List<AvailablePlanResponse> getAvailablePlans(Long userId, boolean includeEnterprise);
 
     /**
      * Change company's active plan
@@ -49,7 +49,7 @@ public interface SubscriptionManagementService {
      *
      * Error: OptimisticLockException if version conflict (caller should retry)
      */
-    SubscriptionResponse changePlan(Long companyId, String newPlanCode, String billingInterval);
+    SubscriptionResponse changePlan(Long userId, Long companyId, String newPlanCode, String billingInterval);
 
     /**
      * Cancel company's subscription
@@ -69,7 +69,7 @@ public interface SubscriptionManagementService {
      *
      * Return: SubscriptionResponse confirming cancellation
      */
-    SubscriptionResponse cancelSubscription(Long companyId, boolean cancelAtPeriodEnd, String reason);
+    SubscriptionResponse cancelSubscription(Long userId, Long companyId, boolean cancelAtPeriodEnd, String reason);
 
     /**
      * Reactivate canceled subscription
@@ -91,5 +91,5 @@ public interface SubscriptionManagementService {
      *
      * Return: SubscriptionResponse with active subscription
      */
-    SubscriptionResponse reactivateSubscription(Long companyId);
+    SubscriptionResponse reactivateSubscription(Long userId, Long companyId);
 }

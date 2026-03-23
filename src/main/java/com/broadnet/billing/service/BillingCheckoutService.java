@@ -1,13 +1,6 @@
 package com.broadnet.billing.service;
 
-import com.broadnet.billing.dto.request.*;
 import com.broadnet.billing.dto.response.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * BILLING CHECKOUT SERVICE
@@ -27,7 +20,7 @@ public interface BillingCheckoutService {
      * - checkout URL for user to complete payment
      */
     CheckoutSessionResponse createCheckoutSession(
-            String planCode,
+            Long userId, String planCode,
             String billingInterval,
             String successUrl,
             String cancelUrl,

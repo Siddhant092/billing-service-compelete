@@ -61,7 +61,10 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public BillingDetailsResponse getBillingDetails(Long companyId) {
+    public BillingDetailsResponse getBillingDetails(Long userId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getBillingDetails");
+        }
 
         log.debug("Getting billing details for company: {}", companyId);
 
@@ -112,8 +115,12 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
     @Override
     @Transactional
     public BillingDetailsResponse updateBillingAddress(
+            Long userId,
             Long companyId,
             UpdateAddressRequest request) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in updateBillingAddress");
+        }
 
         log.info("Updating billing address for company: {}", companyId);
 
@@ -155,7 +162,7 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
 
         log.info("Billing address updated for company: {}", companyId);
 
-        return getBillingDetails(companyId);
+        return getBillingDetails(userId, companyId);
     }
 
     /**
@@ -173,8 +180,12 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
     @Override
     @Transactional
     public BillingDetailsResponse updatePaymentMethod(
+            Long userId,
             Long companyId,
             UpdatePaymentMethodRequest request) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in updatePaymentMethod");
+        }
 
         log.info("Updating payment method for company: {}", companyId);
 
@@ -230,7 +241,7 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
             paymentMethodRepository.save(billingPaymentMethod);
 
             log.info("Payment method updated for company: {}", companyId);
-            return getBillingDetails(companyId);
+            return getBillingDetails(userId, companyId);
 
         } catch (StripeException e) {
             log.error("Stripe error updating payment method: {}", e.getMessage());
@@ -248,7 +259,7 @@ public class BillingDetailsServiceImpl implements BillingDetailsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public BillingPortalResponse getStripePortalUrl(Long companyId) {
+    public BillingPortalResponse getStripePortalUrl(Long userId, Long companyId) {
 
         log.debug("Generating Stripe portal URL for company: {}", companyId);
 

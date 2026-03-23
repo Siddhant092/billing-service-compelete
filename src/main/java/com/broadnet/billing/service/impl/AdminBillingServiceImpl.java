@@ -53,8 +53,11 @@ public class AdminBillingServiceImpl implements AdminBillingService {
     @Override
     @Transactional
     public PlanLimitUpdateResponse updatePlanLimits(
-            String planCode,
+            Long userId, String planCode,
             UpdatePlanLimitRequest request) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in updatePlanLimits");
+        }
 
         log.info("Admin updating plan limits for plan: {}, limitType: {}",
                 planCode, request.getLimitType());
@@ -105,7 +108,7 @@ public class AdminBillingServiceImpl implements AdminBillingService {
                 request.getEffectiveFrom()
         );
 
-// Step 2: Create new limit
+        // Step 2: Create new limit
         BillingPlanLimit newLimit = new BillingPlanLimit();
         newLimit.setPlan(plan);
         newLimit.setLimitType(BillingPlanLimit.LimitType.valueOf(request.getLimitType()));
@@ -118,7 +121,7 @@ public class AdminBillingServiceImpl implements AdminBillingService {
 
         // Find affected companies
         List<CompanyBilling> affectedCompanies = billingRepository.findAll().stream()
-                .filter(cb -> cb.getActivePlan() != null) // ✅ prevent NPE
+                .filter(cb -> cb.getActivePlan() != null) // prevent NPE
                 .filter(cb -> plan.getId().equals(cb.getActivePlan().getId()))
                 .collect(Collectors.toList());
 
@@ -148,7 +151,11 @@ public class AdminBillingServiceImpl implements AdminBillingService {
     @Override
     @Transactional
     public EnterprisePricingResponse setEnterprisePricing(
-            SetEnterprisePricingRequest request) {
+            Long userId, SetEnterprisePricingRequest request) {
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in setEnterprisePricing");
+        }
 
         log.info("Admin setting enterprise pricing for company: {}", request.getCompanyId());
 
@@ -233,9 +240,13 @@ public class AdminBillingServiceImpl implements AdminBillingService {
     @Override
     @Transactional(readOnly = true)
     public Page<EnterpriseContactAdminResponse> getEnterpriseContacts(
-            String status,
+            Long userId, String status,
             Long assignedTo,
             Pageable pageable) {
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getEnterpriseContacts");
+        }
 
         log.debug("Fetching enterprise contacts - status: {}, assignedTo: {}",
                 status, assignedTo);
@@ -264,8 +275,13 @@ public class AdminBillingServiceImpl implements AdminBillingService {
     @Override
     @Transactional
     public EnterpriseContactAdminResponse updateEnterpriseContact(
+            Long userId,
             Long contactId,
             UpdateEnterpriseContactRequest request) {
+
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in updateEnterpriseContact");
+        }
 
         log.info("Updating enterprise contact: {}", contactId);
 

@@ -33,6 +33,7 @@ public interface UsageAnalyticsService {
      * Return: UsageSummaryResponse with full breakdown
      */
     UsageSummaryResponse getUsageSummary(
+            Long userId,
             Long companyId,
             LocalDate startDate,
             LocalDate endDate,
@@ -61,7 +62,7 @@ public interface UsageAnalyticsService {
      *
      * Return: UsageGraphResponse ready for charting library
      */
-    UsageGraphResponse getUsageGraph(Long companyId, String graphId, String period);
+    UsageGraphResponse getUsageGraph(Long userId, Long companyId, String graphId, String period);
 
     /**
      * Export usage data as CSV or JSON
@@ -79,6 +80,7 @@ public interface UsageAnalyticsService {
      * Return: Byte array (CSV or JSON) for download
      */
     byte[] exportUsageData(
+            Long userId,
             Long companyId,
             String format,
             LocalDate startDate,

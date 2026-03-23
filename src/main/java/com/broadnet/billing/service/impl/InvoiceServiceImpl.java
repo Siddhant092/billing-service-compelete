@@ -50,7 +50,10 @@ public class InvoiceServiceImpl implements InvoiceService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<InvoiceResponse> getInvoices(Long companyId, String status, Pageable pageable) {
+    public Page<InvoiceResponse> getInvoices(Long userId, Long companyId, String status, Pageable pageable) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getInvoices");
+        }
 
         log.debug("Fetching invoices for company: {}, status: {}", companyId, status);
 
@@ -84,7 +87,10 @@ public class InvoiceServiceImpl implements InvoiceService {
      */
     @Override
     @Transactional(readOnly = true)
-    public InvoiceResponse getInvoiceDetail(Long invoiceId, Long companyId) {
+    public InvoiceResponse getInvoiceDetail(Long userId, Long invoiceId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getInvoiceDetail");
+        }
 
         log.debug("Fetching invoice details - ID: {}, Company: {}", invoiceId, companyId);
 
@@ -114,7 +120,10 @@ public class InvoiceServiceImpl implements InvoiceService {
      */
     @Override
     @Transactional(readOnly = true)
-    public byte[] downloadInvoicePdf(Long invoiceId, Long companyId) {
+    public byte[] downloadInvoicePdf(Long userId, Long invoiceId, Long companyId) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in downloadInvoicePdf");
+        }
 
         log.info("Downloading PDF for invoice {} by company {}", invoiceId, companyId);
 

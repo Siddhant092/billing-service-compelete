@@ -31,7 +31,7 @@ public interface AdminBillingService {
      * Return: PlanLimitUpdateResponse with affected count and job ID
      */
     PlanLimitUpdateResponse updatePlanLimits(
-            String planCode,
+            Long userId, String planCode,
             UpdatePlanLimitRequest request
     );
 
@@ -52,7 +52,7 @@ public interface AdminBillingService {
      * Return: EnterprisePricingResponse with pricing ID
      */
     EnterprisePricingResponse setEnterprisePricing(
-            SetEnterprisePricingRequest request
+            Long userId, SetEnterprisePricingRequest request
     );
 
     /**
@@ -67,7 +67,7 @@ public interface AdminBillingService {
      * Return: Paginated list of contacts for sales team
      */
     Page<EnterpriseContactAdminResponse> getEnterpriseContacts(
-            String status,
+            Long userId, String status,
             Long assignedTo,
             Pageable pageable
     );
@@ -88,6 +88,7 @@ public interface AdminBillingService {
      * Return: Updated EnterpriseContactAdminResponse
      */
     EnterpriseContactAdminResponse updateEnterpriseContact(
+            Long userId,
             Long contactId,
             UpdateEnterpriseContactRequest request
     );

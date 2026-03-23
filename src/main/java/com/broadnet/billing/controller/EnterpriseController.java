@@ -81,13 +81,15 @@ public class EnterpriseController {
      */
     @PostMapping("/contact")
     public ResponseEntity<EnterpriseContactResponse> submitEnterpriseContact(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody CreateEnterpriseContactRequest request,
-            @RequestHeader(value = "X-Company-Id", required = false) Long companyId) {
+            @RequestParam(value = "company_id", required = false) Long companyId) {
 
         log.info("Submitting enterprise contact request from: {}", request.getEmail());
 
         try {
             EnterpriseContactResponse response = enterpriseService.submitContactRequest(
+                    userId,
                     request,
                     companyId
             );
@@ -150,12 +152,13 @@ public class EnterpriseController {
      */
     @GetMapping("/summary")
     public ResponseEntity<EnterpriseSummaryResponse> getEnterpriseSummary(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching enterprise summary for company: {}", companyId);
 
         try {
-            EnterpriseSummaryResponse summary = enterpriseService.getEnterpriseSummary(companyId);
+            EnterpriseSummaryResponse summary = enterpriseService.getEnterpriseSummary(userId, companyId);
             return ResponseEntity.ok(summary);
 
         } catch (IllegalStateException e) {
@@ -216,13 +219,15 @@ public class EnterpriseController {
      */
     @GetMapping("/billing-periods")
     public ResponseEntity<List<BillingPeriodResponse>> getBillingPeriods(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId,
             @RequestParam(value = "limit", required = false, defaultValue = "12") int limit) {
 
         log.debug("Fetching billing periods for company: {}, limit: {}", companyId, limit);
 
         try {
             List<BillingPeriodResponse> periods = enterpriseService.getBillingPeriods(
+                    userId,
                     companyId,
                     Math.min(limit, 24)  // Cap at 24 for performance
             );

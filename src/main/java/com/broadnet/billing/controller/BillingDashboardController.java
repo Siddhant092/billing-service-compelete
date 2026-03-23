@@ -69,13 +69,15 @@ public class BillingDashboardController {
      */
     @GetMapping("/notifications")
     public ResponseEntity<Page<BillingNotificationResponse>> getNotifications(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId,
             Pageable pageable) {
 
         log.debug("Fetching notifications for company: {}, page: {}", companyId, pageable.getPageNumber());
 
         try {
             Page<BillingNotificationResponse> notifications = dashboardService.getNotifications(
+                    userId,
                     companyId,
                     pageable
             );
@@ -122,12 +124,13 @@ public class BillingDashboardController {
      */
     @GetMapping("/current-plan")
     public ResponseEntity<CurrentPlanResponse> getCurrentPlan(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching current plan for company: {}", companyId);
 
         try {
-            CurrentPlanResponse plan = dashboardService.getCurrentPlan(companyId);
+            CurrentPlanResponse plan = dashboardService.getCurrentPlan(userId, companyId);
             return ResponseEntity.ok(plan);
 
         } catch (IllegalStateException e) {
@@ -175,12 +178,13 @@ public class BillingDashboardController {
      */
     @GetMapping("/billing-snapshot")
     public ResponseEntity<BillingSnapshotResponse> getBillingSnapshot(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching billing snapshot for company: {}", companyId);
 
         try {
-            BillingSnapshotResponse snapshot = dashboardService.getBillingSnapshot(companyId);
+            BillingSnapshotResponse snapshot = dashboardService.getBillingSnapshot(userId, companyId);
             return ResponseEntity.ok(snapshot);
 
         } catch (Exception e) {
@@ -233,12 +237,13 @@ public class BillingDashboardController {
      */
     @GetMapping("/usage-metrics")
     public ResponseEntity<UsageMetricsResponse> getUsageMetrics(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching usage metrics for company: {}", companyId);
 
         try {
-            UsageMetricsResponse metrics = dashboardService.getUsageMetrics(companyId);
+            UsageMetricsResponse metrics = dashboardService.getUsageMetrics(userId, companyId);
             return ResponseEntity.ok(metrics);
 
         } catch (Exception e) {
@@ -282,13 +287,15 @@ public class BillingDashboardController {
      */
     @GetMapping("/available-boosts")
     public ResponseEntity<List<AvailableBoostResponse>> getAvailableBoosts(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "company_id") Long companyId,
             @RequestParam(value = "category", required = false) String category) {
 
         log.debug("Fetching available boosts for company: {}, category: {}", companyId, category);
 
         try {
             List<AvailableBoostResponse> boosts = dashboardService.getAvailableBoosts(
+                    userId,
                     companyId,
                     category
             );
@@ -328,12 +335,13 @@ public class BillingDashboardController {
      */
     @GetMapping("/overview")
     public ResponseEntity<DashboardOverviewResponse> getDashboardOverview(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching dashboard overview for company: {}", companyId);
 
         try {
-            DashboardOverviewResponse overview = dashboardService.getDashboardOverview(companyId);
+            DashboardOverviewResponse overview = dashboardService.getDashboardOverview(userId, companyId);
             return ResponseEntity.ok(overview);
 
         } catch (Exception e) {
@@ -349,13 +357,14 @@ public class BillingDashboardController {
      */
     @PatchMapping("/notifications/{notificationId}/read")
     public ResponseEntity<Void> markNotificationAsRead(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long notificationId,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Marking notification {} as read for company: {}", notificationId, companyId);
 
         try {
-            dashboardService.markNotificationAsRead(notificationId, companyId);
+            dashboardService.markNotificationAsRead(userId, notificationId, companyId);
             return ResponseEntity.ok().build();
 
         } catch (com.broadnet.billing.exception.IllegalAccessException e) {
@@ -373,13 +382,14 @@ public class BillingDashboardController {
      */
     @DeleteMapping("/notifications/{notificationId}")
     public ResponseEntity<Void> deleteNotification(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long notificationId,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Deleting notification {} for company: {}", notificationId, companyId);
 
         try {
-            dashboardService.deleteNotification(notificationId, companyId);
+            dashboardService.deleteNotification(userId, notificationId, companyId);
             return ResponseEntity.noContent().build();
 
         } catch (IllegalAccessException e) {
@@ -400,13 +410,15 @@ public class BillingDashboardController {
      */
     @PostMapping("/boosts/purchase")
     public ResponseEntity<BoostPurchaseResponse> purchaseBoost(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody PurchaseBoostRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader(value = "company_id") Long companyId) {
 
         log.info("Purchasing boost {} for company: {}", request.getAddonCode(), companyId);
 
         try {
             BoostPurchaseResponse response = dashboardService.purchaseBoost(
+                    userId,
                     companyId,
                     request.getAddonCode(),
                     request.getBillingInterval()

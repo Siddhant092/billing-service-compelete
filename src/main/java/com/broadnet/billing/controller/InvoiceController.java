@@ -70,7 +70,8 @@ public class InvoiceController {
      */
     @GetMapping
     public ResponseEntity<Page<InvoiceResponse>> getInvoices(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId,
             @RequestParam(value = "status", required = false) String status,
             Pageable pageable) {
 
@@ -79,6 +80,7 @@ public class InvoiceController {
 
         try {
             Page<InvoiceResponse> invoices = invoiceService.getInvoices(
+                    userId,
                     companyId,
                     status,
                     pageable
@@ -129,13 +131,14 @@ public class InvoiceController {
      */
     @GetMapping("/{invoiceId}")
     public ResponseEntity<InvoiceResponse> getInvoiceDetail(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long invoiceId,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching invoice details for invoiceId: {}, company: {}", invoiceId, companyId);
 
         try {
-            InvoiceResponse invoice = invoiceService.getInvoiceDetail(invoiceId, companyId);
+            InvoiceResponse invoice = invoiceService.getInvoiceDetail(userId, invoiceId, companyId);
             return ResponseEntity.ok(invoice);
 
 //        } catch (IllegalAccessException e) {
@@ -174,13 +177,14 @@ public class InvoiceController {
      */
     @GetMapping("/{invoiceId}/download")
     public ResponseEntity<?> downloadInvoicePdf(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long invoiceId,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Downloading PDF for invoice {} by company {}", invoiceId, companyId);
 
         try {
-            byte[] pdfBytes = invoiceService.downloadInvoicePdf(invoiceId, companyId);
+            byte[] pdfBytes = invoiceService.downloadInvoicePdf(userId, invoiceId, companyId);
 
             return ResponseEntity.ok()
                     .header("Content-Type", "application/pdf")

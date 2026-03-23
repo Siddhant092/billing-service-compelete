@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 //@AllArgsConstructor
 @Builder
 public class IncrementAnswerUsageRequest {
-    // company_id comes from header, not body
+    // company_id comes from parameter, not body
     // count = 1 always (one answer = one increment)
 }

@@ -77,13 +77,15 @@ public class UsageEnforcementController {
      */
     @PostMapping("/increment-answer")
     public ResponseEntity<UsageCheckResponse> incrementAnswerUsage(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody IncrementAnswerUsageRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Incrementing answer usage for company: {}", companyId);
 
         try {
             UsageCheckResponse response = usageService.checkAndEnforceAnswersUsage(
+                    userId,
                     companyId,
                     1  // Each answer = 1 unit
             );
@@ -138,13 +140,14 @@ public class UsageEnforcementController {
      */
     @PostMapping("/check-kb-page")
     public ResponseEntity<UsageCheckResponse> checkKbPageLimit(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody CheckKbPageLimitRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Checking KB page limit for company: {}", companyId);
 
         try {
-            UsageCheckResponse response = usageService.checkKbPageUsage(companyId);
+            UsageCheckResponse response = usageService.checkKbPageUsage(userId, companyId);
 
             if (!response.getAllowed()) {
                 log.info("KB page creation blocked for company: {}, used: {}/{}",

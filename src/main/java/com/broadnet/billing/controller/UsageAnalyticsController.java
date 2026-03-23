@@ -88,7 +88,8 @@ public class UsageAnalyticsController {
      */
     @GetMapping("/summary")
     public ResponseEntity<UsageSummaryResponse> getUsageSummary(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId,
             @RequestParam(value = "start_date", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "end_date", required = false)
@@ -100,6 +101,7 @@ public class UsageAnalyticsController {
 
         try {
             UsageSummaryResponse summary = analyticsService.getUsageSummary(
+                    userId,
                     companyId,
                     startDate,
                     endDate,
@@ -153,14 +155,16 @@ public class UsageAnalyticsController {
      */
     @GetMapping("/graph/{graphId}")
     public ResponseEntity<UsageGraphResponse> getUsageGraph(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable String graphId,
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestParam(value = "company_id") Long companyId,
             @RequestParam(value = "period", required = false, defaultValue = "month") String period) {
 
         log.debug("Fetching usage graph {} for company: {}, period: {}", graphId, companyId, period);
 
         try {
             UsageGraphResponse graph = analyticsService.getUsageGraph(
+                    userId,
                     companyId,
                     graphId,
                     period
@@ -208,7 +212,8 @@ public class UsageAnalyticsController {
      */
     @GetMapping("/export")
     public ResponseEntity<?> exportUsageData(
-            @RequestHeader(value = "X-Company-Id") Long companyId,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId,
             @RequestParam(value = "format", required = false, defaultValue = "csv") String format,
             @RequestParam(value = "start_date", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -219,6 +224,7 @@ public class UsageAnalyticsController {
 
         try {
             byte[] data = analyticsService.exportUsageData(
+                    userId,
                     companyId,
                     format,
                     startDate,

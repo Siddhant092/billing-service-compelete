@@ -51,11 +51,15 @@ public class UsageAnalyticsServiceImpl implements UsageAnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public UsageSummaryResponse getUsageSummary(
+            Long userId,
             Long companyId,
             LocalDate startDate,
             LocalDate endDate,
             String groupBy) {
 
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getUsageSummary");
+        }
         log.debug("Getting usage summary for company: {}, from {} to {}",
                 companyId, startDate, endDate);
 
@@ -100,7 +104,10 @@ public class UsageAnalyticsServiceImpl implements UsageAnalyticsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public UsageGraphResponse getUsageGraph(Long companyId, String graphId, String period) {
+    public UsageGraphResponse getUsageGraph(Long userId, Long companyId, String graphId, String period) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getUsageGraph");
+        }
 
         log.debug("Getting usage graph for company: {}, graphId: {}, period: {}",
                 companyId, graphId, period);
@@ -160,10 +167,14 @@ public class UsageAnalyticsServiceImpl implements UsageAnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public byte[] exportUsageData(
+            Long userId,
             Long companyId,
             String format,
             LocalDate startDate,
             LocalDate endDate) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in exportUsageData");
+        }
 
         log.info("Exporting usage data for company: {}, format: {}", companyId, format);
 

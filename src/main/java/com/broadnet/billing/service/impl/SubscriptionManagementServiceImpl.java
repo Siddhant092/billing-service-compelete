@@ -49,7 +49,10 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AvailablePlanResponse> getAvailablePlans(boolean includeEnterprise) {
+    public List<AvailablePlanResponse> getAvailablePlans(Long userId, boolean includeEnterprise) {
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in getAvailablePlans");
+        }
 
         List<BillingPlan> plans = planRepository.findAllActivePlans();
 
@@ -65,8 +68,11 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
      */
     @Override
     @Transactional
-    public SubscriptionResponse changePlan(Long companyId, String newPlanCode, String billingInterval) {
+    public SubscriptionResponse changePlan(Long userId, Long companyId, String newPlanCode, String billingInterval) {
 
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in changePlan");
+        }
         log.info("Changing plan for company {} to {}", companyId, newPlanCode);
 
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
@@ -150,8 +156,11 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
      */
     @Override
     @Transactional
-    public SubscriptionResponse cancelSubscription(Long companyId, boolean cancelAtPeriodEnd, String reason) {
+    public SubscriptionResponse cancelSubscription(Long userId, Long companyId, boolean cancelAtPeriodEnd, String reason) {
 
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in cancelSubscription");
+        }
         log.info("Canceling subscription for company {}, atPeriodEnd: {}", companyId, cancelAtPeriodEnd);
 
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
@@ -209,8 +218,11 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
      */
     @Override
     @Transactional
-    public SubscriptionResponse reactivateSubscription(Long companyId) {
+    public SubscriptionResponse reactivateSubscription(Long userId, Long companyId) {
 
+        if (userId == null || userId == 0L) {
+            log.error("userId is null or empty in reactivateSubscription");
+        }
         log.info("Reactivating subscription for company {}", companyId);
 
         CompanyBilling billing = billingRepository.findByCompanyId(companyId)
@@ -306,7 +318,7 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
 
             subscription.update(SubscriptionUpdateParams.builder()
                     .addItem(SubscriptionUpdateParams.Item.builder()
-                            .setId(subscription.getItems().getData().get(0).getId())
+                            .setId(subscription.getItems().getData().getFirst().getId())
                             .setPrice(price.getStripePriceId())
                             .build())
                     .build());

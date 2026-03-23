@@ -65,12 +65,13 @@ public class BillingDetailsController {
      */
     @GetMapping
     public ResponseEntity<BillingDetailsResponse> getBillingDetails(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Fetching billing details for company: {}", companyId);
 
         try {
-            BillingDetailsResponse details = detailsService.getBillingDetails(companyId);
+            BillingDetailsResponse details = detailsService.getBillingDetails(userId, companyId);
             return ResponseEntity.ok(details);
 
         } catch (Exception e) {
@@ -111,13 +112,15 @@ public class BillingDetailsController {
      */
     @PutMapping("/address")
     public ResponseEntity<BillingDetailsResponse> updateBillingAddress(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody UpdateAddressRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Updating billing address for company: {}", companyId);
 
         try {
             BillingDetailsResponse details = detailsService.updateBillingAddress(
+                    userId,
                     companyId,
                     request
             );
@@ -164,13 +167,15 @@ public class BillingDetailsController {
      */
     @PostMapping("/payment-methods/update")
     public ResponseEntity<BillingDetailsResponse> updatePaymentMethod(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody UpdatePaymentMethodRequest request,
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Updating payment method for company: {}", companyId);
 
         try {
             BillingDetailsResponse details = detailsService.updatePaymentMethod(
+                    userId,
                     companyId,
                     request
             );
@@ -215,12 +220,13 @@ public class BillingDetailsController {
      */
     @PostMapping("/stripe-portal")
     public ResponseEntity<BillingPortalResponse> getStripePortalUrl(
-            @RequestHeader(value = "X-Company-Id") Long companyId) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.debug("Generating Stripe portal URL for company: {}", companyId);
 
         try {
-            BillingPortalResponse response = detailsService.getStripePortalUrl(companyId);
+            BillingPortalResponse response = detailsService.getStripePortalUrl(userId, companyId);
             return ResponseEntity.ok(response);
 
         } catch (IllegalStateException e) {

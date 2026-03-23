@@ -21,7 +21,7 @@ public interface InvoiceService {
      *
      * Return: Paginated InvoiceResponse list
      */
-    Page<InvoiceResponse> getInvoices(Long companyId, String status, Pageable pageable);
+    Page<InvoiceResponse> getInvoices(Long userId, Long companyId, String status, Pageable pageable);
 
     /**
      * Get specific invoice with line items
@@ -38,7 +38,7 @@ public interface InvoiceService {
      *
      * Return: InvoiceResponse with full details
      */
-    InvoiceResponse getInvoiceDetail(Long invoiceId, Long companyId);
+    InvoiceResponse getInvoiceDetail(Long userId, Long invoiceId, Long companyId);
 
     /**
      * Download invoice PDF
@@ -53,6 +53,6 @@ public interface InvoiceService {
      *
      * Throws: IllegalAccessException if not company's invoice
      */
-    byte[] downloadInvoicePdf(Long invoiceId, Long companyId);
+    byte[] downloadInvoicePdf(Long userId, Long invoiceId, Long companyId);
 }
 

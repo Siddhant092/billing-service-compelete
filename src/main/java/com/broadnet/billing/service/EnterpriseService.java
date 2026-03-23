@@ -28,6 +28,7 @@ public interface EnterpriseService {
      * Return: EnterpriseContactResponse with ID and status
      */
     EnterpriseContactResponse submitContactRequest(
+            Long userId,
             CreateEnterpriseContactRequest request,
             Long companyId
     );
@@ -46,7 +47,9 @@ public interface EnterpriseService {
      *
      * Throws: IllegalStateException if not enterprise customer
      */
-    EnterpriseSummaryResponse getEnterpriseSummary(Long companyId);
+    EnterpriseSummaryResponse getEnterpriseSummary(
+            Long userId,
+            Long companyId);
 
     /**
      * Get usage-based billing periods (last N periods)
@@ -61,5 +64,8 @@ public interface EnterpriseService {
      *
      * Return: List of BillingPeriodResponse
      */
-    List<BillingPeriodResponse> getBillingPeriods(Long companyId, int limit);
+    List<BillingPeriodResponse> getBillingPeriods(
+            Long userId,
+            Long companyId,
+            int limit);
 }

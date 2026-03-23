@@ -82,6 +82,7 @@ public class AdminBillingController {
      */
     @PutMapping("/plans/{plan_code}/limits")
     public ResponseEntity<PlanLimitUpdateResponse> updatePlanLimits(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable("plan_code") String planCode,
             @Valid @RequestBody UpdatePlanLimitRequest request) {
 
@@ -89,6 +90,7 @@ public class AdminBillingController {
 
         try {
             PlanLimitUpdateResponse response = adminService.updatePlanLimits(
+                    userId,
                     planCode,
                     request
             );
@@ -158,12 +160,13 @@ public class AdminBillingController {
      */
     @PostMapping("/enterprise/pricing")
     public ResponseEntity<EnterprisePricingResponse> setEnterprisePricing(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody SetEnterprisePricingRequest request) {
 
         log.info("Admin setting enterprise pricing for company: {}", request.getCompanyId());
 
         try {
-            EnterprisePricingResponse response = adminService.setEnterprisePricing(request);
+            EnterprisePricingResponse response = adminService.setEnterprisePricing(userId, request);
 
             log.info("Enterprise pricing set for company: {}, pricingId: {}",
                     request.getCompanyId(), response.getPricingId());
@@ -235,6 +238,7 @@ public class AdminBillingController {
      */
     @GetMapping("/enterprise/contacts")
     public ResponseEntity<Page<EnterpriseContactAdminResponse>> getEnterpriseContacts(
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "assigned_to", required = false) Long assignedTo,
             Pageable pageable) {
@@ -243,6 +247,7 @@ public class AdminBillingController {
 
         try {
             Page<EnterpriseContactAdminResponse> contacts = adminService.getEnterpriseContacts(
+                    userId,
                     status,
                     assignedTo,
                     pageable
@@ -297,6 +302,7 @@ public class AdminBillingController {
      */
     @PatchMapping("/enterprise/contacts/{contactId}")
     public ResponseEntity<EnterpriseContactAdminResponse> updateEnterpriseContact(
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long contactId,
             @Valid @RequestBody UpdateEnterpriseContactRequest request) {
 
@@ -304,6 +310,7 @@ public class AdminBillingController {
 
         try {
             EnterpriseContactAdminResponse response = adminService.updateEnterpriseContact(
+                    userId,
                     contactId,
                     request
             );

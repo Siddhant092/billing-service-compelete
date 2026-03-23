@@ -48,19 +48,21 @@ public class BillingCheckoutController {
      */
     @PostMapping("/create-session")
     public ResponseEntity<CheckoutSessionResponse> createCheckoutSession(
+            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody CreateCheckoutSessionRequest request,
-            @RequestHeader(value = "Authorization") String authToken) {
+            @RequestParam(value = "company_id") Long companyId) {
 
         log.info("Creating checkout session for plan: {}, interval: {}",
                 request.getPlanCode(), request.getBillingInterval());
 
         try {
             CheckoutSessionResponse response = checkoutService.createCheckoutSession(
+                    userId,
                     request.getPlanCode(),
                     request.getBillingInterval(),
                     request.getSuccessUrl(),
                     request.getCancelUrl(),
-                    Long.valueOf(authToken)  // Extract company_id from token
+                    companyId
             );
 
             log.info("Checkout session created: {}", response.getCheckoutSessionId());

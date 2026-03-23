@@ -25,7 +25,7 @@ public interface BillingDashboardService {
      *
      * Return: Paginated notifications
      */
-    Page<BillingNotificationResponse> getNotifications(Long companyId, Pageable pageable);
+    Page<BillingNotificationResponse> getNotifications(Long userId, Long companyId, Pageable pageable);
 
     /**
      * Get current active plan with all limits
@@ -39,7 +39,7 @@ public interface BillingDashboardService {
      *
      * Return: CurrentPlanResponse with complete plan information
      */
-    CurrentPlanResponse getCurrentPlan(Long companyId);
+    CurrentPlanResponse getCurrentPlan(Long userId, Long companyId);
 
     /**
      * Get billing snapshot (payment, status, invoices)
@@ -53,7 +53,7 @@ public interface BillingDashboardService {
      *
      * Return: BillingSnapshotResponse
      */
-    BillingSnapshotResponse getBillingSnapshot(Long companyId);
+    BillingSnapshotResponse getBillingSnapshot(Long userId, Long companyId);
 
     /**
      * Get usage metrics for progress bars
@@ -73,7 +73,7 @@ public interface BillingDashboardService {
      *
      * Return: UsageMetricsResponse
      */
-    UsageMetricsResponse getUsageMetrics(Long companyId);
+    UsageMetricsResponse getUsageMetrics(Long userId, Long companyId);
 
     /**
      * Get available boosts for purchase
@@ -86,7 +86,7 @@ public interface BillingDashboardService {
      *
      * Return: List of AvailableBoostResponse
      */
-    List<AvailableBoostResponse> getAvailableBoosts(Long companyId, String category);
+    List<AvailableBoostResponse> getAvailableBoosts(Long userId, Long companyId, String category);
 
     /**
      * Get complete dashboard overview
@@ -97,7 +97,7 @@ public interface BillingDashboardService {
      *
      * Return: DashboardOverviewResponse with all dashboard data
      */
-    DashboardOverviewResponse getDashboardOverview(Long companyId);
+    DashboardOverviewResponse getDashboardOverview(Long userId, Long companyId);
 
     /**
      * Mark notification as read
@@ -110,7 +110,7 @@ public interface BillingDashboardService {
      * - is_read = true
      * - read_at = NOW
      */
-    void markNotificationAsRead(Long notificationId, Long companyId);
+    void markNotificationAsRead(Long userId, Long notificationId, Long companyId);
 
     /**
      * Delete notification permanently
@@ -119,7 +119,7 @@ public interface BillingDashboardService {
      * - Notification exists
      * - Belongs to this company
      */
-    void deleteNotification(Long notificationId, Long companyId);
+    void deleteNotification(Long userId, Long notificationId, Long companyId);
 
     /**
      * Purchase a boost add-on
@@ -139,5 +139,5 @@ public interface BillingDashboardService {
      *
      * Return: BoostPurchaseResponse with confirmation
      */
-    BoostPurchaseResponse purchaseBoost(Long companyId, String addonCode, String billingInterval);
+    BoostPurchaseResponse purchaseBoost(Long userId, Long companyId, String addonCode, String billingInterval);
 }

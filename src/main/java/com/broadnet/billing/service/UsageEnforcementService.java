@@ -32,7 +32,7 @@ public interface UsageEnforcementService {
      *
      * Performance: Must complete in < 50ms
      */
-    UsageCheckResponse checkAndEnforceAnswersUsage(Long companyId, int count);
+    UsageCheckResponse checkAndEnforceAnswersUsage(Long userId, Long companyId, int count);
 
     /**
      * Check KB page usage (read-only, no increment)
@@ -49,12 +49,12 @@ public interface UsageEnforcementService {
      *
      * Performance: Must complete in < 20ms
      */
-    UsageCheckResponse checkKbPageUsage(Long companyId);
+    UsageCheckResponse checkKbPageUsage(Long userId, Long companyId);
 
     /**
      * Get usage status for display
      * Shows current usage, limits, percentages
      */
-    UsageStatus getUsageStatus(Long companyId);
+    UsageStatus getUsageStatus(Long userIn, Long companyId);
 }
 
